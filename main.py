@@ -1,4 +1,4 @@
-from flask import Flask, flash, redirect, render_template,request,session 
+from flask import Flask, flash, redirect, render_template,request,Response,session 
 from  subprocess import Popen,PIPE
 app = Flask(__name__)
 
@@ -10,13 +10,34 @@ def hello():
 def runScripts():
         dirpath  = request.values.get("dir")
         print dirpath
-        cmd = ["scripts/test.sh"] 
-        p = Popen(cmd,stdout=PIPE,stderr=PIPE,stdin=PIPE)
-        with p.stdout:
-		for line in iter(p.stdout.readline,b''):
-			print line
-        p.wait()
-	return "Processing Complete"
+        def inner():
+                cmd = ["scripts/test.sh"] 
+                proc = Popen(cmd,stdout=PIPE,stderr=PIPE,stdin=PIPE)
+                for line in iter(proc.stdout.readline,''):
+                    yield line.rstrip() + '<br/>\n'
+
+	
+        return Response(inner(), mimetype='text/html')	
+        
+
+
+
+@app.route("/train")
+def train():
+        def inner():
+                proc = Popen(
+                    ["processes/train.py"],             #call something with a lot of output so we can see it
+                    shell=True,
+                    stdout=PIPE
+                )
+
+                for line in iter(proc.stdout.readline,''):
+                    yield line.rstrip() + '<br/>\n'
+
+        return Response(inner(), mimetype='text/html')  # text/html is required for most browsers to show th$
+
+
 
 if __name__ == "__main__":
-	app.run()
+        app.run(host='0.0.0.0',port=8080)
+        
