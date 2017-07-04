@@ -14,7 +14,7 @@ def runScripts():
     cmd = ["scripts/test.sh"] 
     proc = Popen(cmd,stdout=PIPE,stderr=PIPE,stdin=PIPE)
     for line in iter(proc.stdout.readline,''):
-      yield line.rstrip() + '<br/>\n'
+      yield line.rstrip() + b'<br/>\n'
 	
   return Response(inner(), mimetype='text/html')	
         
@@ -35,5 +35,8 @@ def train():
 
 
 if __name__ == "__main__":
-  app.run(host='0.0.0.0',port=8080)
+  try:
+    app.run(host='0.0.0.0',port=8080)
+  except KeyboardInterrupt:
+    pass
  
