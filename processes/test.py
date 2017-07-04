@@ -1,2 +1,2 @@
 #!/usr/bin/python
-print "Running python proces"
+print("Running python proces")
