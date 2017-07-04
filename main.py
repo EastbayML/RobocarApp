@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, Response
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from argparse import ArgumentParser
 import sys
 
@@ -14,22 +14,25 @@ args = Args()
 def hello():
   return render_template('first.html')
 
-@app.route("/raspberry")
-def raspberry():
-  return render_template('raspberry.html')
+@app.route("/remoteCopy")
+def remoteCopy():
+  return render_template('remoteCopy.html')
 
-@app.route("/runRPiScripts")
-def runRpiScripts():
+@app.route("/runRemoteCopy")
+def runRemoteCopy():
   from_dir  = request.values.get("from")
   to_dir  = request.values.get("to")
   def inner():
-    cmd = ['bash', '-c', 'rsync -razv -e ssh ' +  from_dir + ' ' + to_dir] 
+    cmd = ['rsync', '-razq', from_dir, to_dir] 
     try:
-      proc = Popen(cmd,stdout=PIPE,stderr=PIPE,stdin=PIPE)
+      proc = Popen(cmd,stdout=PIPE,stderr=STDOUT,stdin=PIPE)
       for line in iter(proc.stdout.readline,''):
-        return line.rstrip() + b'<br/>\n'
+        yield line.rstrip() + b'<br/>\n'
+      proc.wait()
+      yield 'All done'
+
     except BaseException as e:
-      return str(e) + '<br/>\n' 
+      yield str(e) + '<br/>\n' 
 	
   return Response(inner(), mimetype='text/html')	
         
